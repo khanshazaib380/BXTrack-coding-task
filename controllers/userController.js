@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/Users');
+const { updateUserProfileSchema } = require('./user.specs');
 
 
 // GET /api/users
@@ -31,7 +32,10 @@ const getUserProfile = async (req, res) => {
     try {
         // Extract user ID from token
         const userId = req.user.userId;
+        if(!userId){
+            return res.status(400).json({ code: 400, success: false, message: "provide userId", data: null });
 
+        }
         // Find user by ID
         const user = await User.findById(userId).select('-password').populate('role');
         if (!user) {
@@ -52,8 +56,17 @@ const getUserProfile = async (req, res) => {
 // Update user profile
 const updateUserProfile = async (req, res) => {
     try {
+
+        const { error, value } = updateUserProfileSchema.validate(req.body);
+        if (error) {
+            return res.status(400).json({ code: 400, success: false, message: error.details[0].message, data: null });
+        }
         // Extract user ID from token
         const userId = req.user.userId;
+        if(!userId){
+            return res.status(400).json({ code: 400, success: false, message: "provide userId", data: null });
+
+        }
 
         // Extract updated fields from request body
         const { username, email, password } = req.body;
