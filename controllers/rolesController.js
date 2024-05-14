@@ -2,7 +2,6 @@ const Role = require('../models/Roles');
 const { createRoleSchema, updateRoleSchema } = require('./roles.specs');
 const User = require('../models/Users');
 
-
 // Create a new role
 const createRole = async (req, res) => {
     try {
@@ -11,8 +10,7 @@ const createRole = async (req, res) => {
             return res.status(400).json({ code: 400, success: false, message: error.details[0].message, data: null });
         }
 
-        const { roleName, permissions } = value;
-        const newRole = new Role({ roleName, permissions });
+        const newRole = new Role(value);
         await newRole.save();
         res.status(201).json({ code: 200, success: true, message: 'Role created successfully', data: newRole });
     } catch (error) {
@@ -35,10 +33,6 @@ const getAllRoles = async (req, res) => {
 // Get a single role by ID
 const getRoleById = async (req, res) => {
     try {
-        if (!req.params.id) {
-            return res.status(404).json({ code: 400, success: false, message: 'bad request' });
-
-        }
         const role = await Role.findById(req.params.id);
         if (!role) {
             return res.status(404).json({ code: 404, success: false, message: 'Role not found' });
@@ -53,17 +47,12 @@ const getRoleById = async (req, res) => {
 // Update a role by ID
 const updateRoleById = async (req, res) => {
     try {
-        if (!req.params.id) {
-            return res.status(404).json({ code: 400, success: false, message: 'bad request' });
-
-        }
         const { error, value } = updateRoleSchema.validate(req.body);
         if (error) {
             return res.status(400).json({ code: 400, success: false, message: error.details[0].message, data: null });
         }
 
-        const { roleName, permissions } = value;
-        const updatedRole = await Role.findByIdAndUpdate(req.params.id, { roleName, permissions }, { new: true });
+        const updatedRole = await Role.findByIdAndUpdate(req.params.id, value, { new: true });
         if (!updatedRole) {
             return res.status(404).json({ success: false, message: 'Role not found' });
         }
@@ -87,32 +76,25 @@ const deleteRoleById = async (req, res) => {
         res.status(500).json({ code: 500, success: false, message: error.message, error: error.message });
     }
 };
+
+// Assign role to user
 const assignRoleToUser = async (req, res) => {
     try {
         const { userId, roleId } = req.body;
-
-        // Check if both userId and roleId are provided
-        if (!userId || !roleId) {
-            return res.status(400).json({ code: 400, success: false, message: "Both userId and roleId are required.", data: null });
-        }
-
-        // Find the user by ID
         const user = await User.findById(userId);
         if (!user) {
-            return res.status(404).json({ code: 404, success: false, message: "User not found.", data: null });
+            return res.status(404).json({ code: 404, success: false, message: 'User not found' });
         }
 
-        // Find the role by ID
         const role = await Role.findById(roleId);
         if (!role) {
-            return res.status(404).json({ code: 404, success: false, message: "Role not found.", data: null });
+            return res.status(404).json({ code: 404, success: false, message: 'Role not found' });
         }
 
-        // Assign the role to the user
         user.role = roleId;
         await user.save();
 
-        res.status(200).json({ code: 200, success: true, message: "Role assigned to user successfully.", data: { user, role } });
+        res.status(200).json({ code: 200, success: true, message: 'Role assigned to user successfully', data: { user, role } });
     } catch (error) {
         console.error(error);
         res.status(500).json({ code: 500, success: false, message: error.message, error: error.message });
@@ -127,5 +109,3 @@ module.exports = {
     deleteRoleById,
     assignRoleToUser
 };
-
-

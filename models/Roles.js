@@ -6,12 +6,30 @@ const roleSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
-    permissions: {
-        type: [String],
-        required: true
-    }
+    endpoints: [{
+        route: {
+            type: String,
+            required: true
+        },
+        permissions: {
+            create: {
+                type: Boolean,
+                default: false
+            },
+            read: {
+                type: Boolean,
+                default: false
+            },
+            update: {
+                type: Boolean,
+                default: false
+            },
+            delete: {
+                type: Boolean,
+                default: false
+            }
+        }
+    }]
 });
 
-
-
-module.exports = mongoose.model('Role', roleSchema);;
+module.exports = mongoose.model('Role', roleSchema);

@@ -16,11 +16,26 @@ async function connectToMongoDB() {
 
 // Define default roles
 const defaultRoles = [
-  { roleName: 'Admin', permissions: ['create', 'read', 'update', 'delete'] },
-  { roleName: 'User', permissions: ['read'] },
-  { roleName: 'Guest', permissions: ['read'] },
+  { 
+    roleName: 'Admin', 
+    endpoints: [
+      { route: '/api/users', permissions: { create: true, read: true, update: true, delete: true } },
+      { route: '/api/roles', permissions: { create: true, read: true, update: true, delete: true } }
+    ]
+  },
+  { 
+    roleName: 'User', 
+    endpoints: [
+      { route: '/api/users', permissions: { create: true, read: true, update: true, delete: true } }
+    ]
+  },
+  { 
+    roleName: 'Guest', 
+    endpoints: [
+      { route: '/api/users', permissions: { read: true } }
+    ]
+  },
 ];
-
 // Seed roles to the database
 async function seedRoles() {
   try {
@@ -43,9 +58,8 @@ async function seedRoles() {
 async function seedAdminUser() {
   try {
     // Check if admin user already exists
-    
-    const existingAdmin = await User.findOne({ roleName: 'Admin' });
-    if (existingAdmin) {
+    const existingAdmin = await User.findOne({}).populate('role', 'roleName');
+    if (existingAdmin && existingAdmin.role.roleName === 'Admin') {
       console.log('Admin user already exists. Skipping seeding.');
       return;
     }
@@ -62,7 +76,7 @@ async function seedAdminUser() {
       username: 'admin',
       email: srvConfig.adminEmail,
       password: hashedPassword,
-      role: adminRole._id
+      role: adminRole._id // Assign the ObjectId of the 'Admin' role
     });
     await adminUser.save();
     console.log('Admin user seeded successfully');
@@ -74,6 +88,8 @@ async function seedAdminUser() {
     mongoose.disconnect();
   }
 }
+
+
 
 // Main function to seed roles and admin user
 async function seedDatabase() {
