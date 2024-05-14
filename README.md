@@ -1,5 +1,4 @@
-# 📦 Express.js & Socket.io Boilerplate
-Simple Express.js & Socket.io Boilerplate.
+
 
 
 ## ✨ Features
